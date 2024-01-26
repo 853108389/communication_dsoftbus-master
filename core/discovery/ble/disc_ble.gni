@@ -1,0 +1,65 @@
+# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../../dsoftbus.gni")
+import("../../common/dfx/dsoftbus_dfx.gni")
+
+native_source_path = rebase_path("$dsoftbus_root_path")
+disc_dep_dir = "dsoftbus_enhance/core/discovery/ble"
+disc_enhanced = exec_script("$dsoftbus_root_path/check_sub_module.py",
+                            [
+                              "$native_source_path",
+                              "$disc_dep_dir",
+                            ],
+                            "value")
+
+ble_discovery_inc = [
+  "$dsoftbus_root_path/core/discovery/ble/dispatcher/include",
+  "$dsoftbus_root_path/core/discovery/ble/approach_ble/include",
+  "$dsoftbus_root_path/core/discovery/ble/share_ble/include",
+  "$dsoftbus_root_path/core/discovery/ble/softbus_ble/include",
+  "$dsoftbus_root_path/core/common/include",
+  "$dsoftbus_root_path/core/common/dfx/hisysevent_adapter/include",
+]
+
+ble_discovery_deps = [ "$dsoftbus_dfx_path/log:softbus_dfx_log" ]
+
+if (!support_bluetooth) {
+  ble_discovery_src = [ "$dsoftbus_root_path/core/discovery/ble/dispatcher/src/disc_ble_dispatcher_virtual.c" ]
+} else {
+  if (!dsoftbus_feature_disc_ble) {
+    ble_discovery_src = [ "$dsoftbus_root_path/core/discovery/ble/dispatcher/src/disc_ble_dispatcher_virtual.c" ]
+  } else {
+    ble_discovery_src = [
+      "$dsoftbus_root_path/core/discovery/ble/dispatcher/src/disc_ble_dispatcher.c",
+      "$dsoftbus_root_path/core/discovery/ble/softbus_ble/src/disc_ble_utils.c",
+      "$dsoftbus_root_path/core/discovery/ble/softbus_ble/src/disc_ble.c",
+    ]
+  }
+}
+
+if (disc_enhanced) {
+  import(
+      "$dsoftbus_root_path/dsoftbus_enhance/core/discovery/ble/approach_ble/approach_ble.gni")
+  import(
+      "$dsoftbus_root_path/dsoftbus_enhance/core/discovery/ble/share_ble/share_ble.gni")
+
+  ble_discovery_src += share_sources + approach_sources
+  ble_discovery_inc += share_include_dirs + approach_include_dirs
+  ble_discovery_deps += share_deps + approach_deps
+} else {
+  ble_discovery_src += [
+    "$dsoftbus_root_path/core/discovery/ble/share_ble/src/disc_share_ble_virtual.c",
+    "$dsoftbus_root_path/core/discovery/ble/approach_ble/src/disc_approach_ble_virtual.c",
+  ]
+}

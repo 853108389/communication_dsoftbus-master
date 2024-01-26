@@ -1,0 +1,101 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/lite/config/component/lite_component.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+import("../../../adapter/common/net/bluetooth/net_bluetooth.gni")
+import("../../../core/common/dfx/dsoftbus_dfx.gni")
+import("../../../dsoftbus.gni")
+
+dsoftbus_root_path = "../../.."
+
+if (!defined(ohos_lite)) {
+  module_output_path = "dsoftbus/adapter"
+  bt_test_sources = [ "bluetooth_mock.cpp" ]
+  bt_test_sources += adapter_ble_src
+
+  bt_test_inc = [ "../../../adapter/common/net/bluetooth/include" ]
+  bt_test_inc += adapter_ble_inc
+
+  bt_test_deps = [
+    "$dsoftbus_dfx_path/log:softbus_dfx_log",
+    "$dsoftbus_root_path/core/common:softbus_utils",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  bt_test_external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+
+  if (support_bluetooth &&
+      (dsoftbus_feature_conn_ble || dsoftbus_feature_conn_br)) {
+    bt_test_external_deps += [ "bluetooth:btframework" ]
+  }
+
+  ohos_unittest("AdapterBleGattServerTest") {
+    module_out_path = module_output_path
+    sources = bt_test_sources
+    sources += [ "softbus_adapter_ble_gatt_server_test.cpp" ]
+
+    include_dirs = bt_test_inc
+    deps = bt_test_deps
+    external_deps = bt_test_external_deps
+  }
+
+  ohos_unittest("AdapterBleGattClientTest") {
+    module_out_path = module_output_path
+    sources = bt_test_sources
+    sources += [ "softbus_adapter_ble_gatt_client_test.cpp" ]
+
+    include_dirs = bt_test_inc
+    deps = bt_test_deps
+    external_deps = bt_test_external_deps
+  }
+
+  ohos_unittest("AdapterBtUtilsTest") {
+    module_out_path = module_output_path
+    sources = [ "adapter_bt_utils_test.cpp" ]
+    sources += adapter_ble_src
+
+    include_dirs = bt_test_inc
+    deps = bt_test_deps
+    external_deps = bt_test_external_deps
+  }
+
+  ohos_unittest("AdapterBtCommonTest") {
+    module_out_path = module_output_path
+    sources = bt_test_sources
+    sources += [ "softbus_adapter_bt_common_test.cpp" ]
+
+    include_dirs = bt_test_inc
+    deps = bt_test_deps
+    external_deps = bt_test_external_deps
+  }
+
+  group("unittest") {
+    testonly = true
+    deps = []
+    if (support_bluetooth &&
+        (dsoftbus_feature_conn_ble || dsoftbus_feature_conn_br)) {
+      deps += [
+        # ":AdapterBleGattClientTest",
+        # ":AdapterBleGattServerTest",
+        # ":AdapterBtCommonTest",
+        # ":AdapterBtUtilsTest",
+      ]
+    }
+  }
+}
